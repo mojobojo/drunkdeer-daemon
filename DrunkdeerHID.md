@@ -1,4 +1,11 @@
 # Drunkdeer HID Protocol Reverse Engineering
+ 
+ ---
+
+## Notes
+- The offsets in the packets are ignoring the first byte so the offsets are shifted by 1. This was due to how I was reverse engineering the web driver.
+
+---
 
 ## Keyboard Types
 
@@ -46,12 +53,12 @@ Below are the main HID commands supported by the keyboard interface. Each comman
 
 | Offset | Description |
 |--------|-------------|
-| 2      | 0x1E |
-| 3      | 0x01 |
-| 6      | 0x01 |
-| 7      | Turbo enabled (1 = on) |
-| 8      | Rapid trigger enabled (1 = on) |
-| 10     | Dual/Last Win: 0 = none, 1 = last win, 2 = dual trigger, 3 = both |
+| 2      | 0x1E Unknown, seems to always be 0x1E |
+| 3      | 0x01 Unknown, seems to always be 0x01 |
+| 6      | 0x01 Unknown, seems to always be 0x01 |
+| 7      | Turbo enabled (1 byte boolean) |
+| 8      | Rapid trigger enabled (1 byte boolean) |
+| 10     | Other Feature Flags (maybe bitflags): 0 = none, 1 = Last Win, 2 = Dual Trigger, 3 = Both |
 | 11     | RTMatch value (unknown purpose) |
 
 ---
@@ -62,18 +69,24 @@ When the keyboard responds to the identity data command (code 160 / 0xA0), the r
 
 | Offset | Description |
 |--------|-------------|
-| 2      | Device link status (used in logic) |
-| 3      | Unused in this context |
-| 4      | Device type or model (used in callback) |
-| 5      | Device type or model (used in callback) |
-| 6      | Device type or model (used in callback) |
-| 7      | Firmware version (used in callback and string) |
-| 8      | Firmware version (used in callback and string) |
-| 15     | Turbo setting value |
-| 16     | Rapid trigger value |
-| 18     | Rapid double-tap value |
-| 19     | Last win value |
-| 30     | RT match value |
+| 1      | status byte 1? |
+| 2      | status byte 2? |
+| 3      | Unused |
+| 4      | Version A |    
+| 5      | Version B |
+| 6      | Version C |
+| 7      | Unknown |
+| 8      | Unknown |
+| 15     | Turbo Enabled (1 byte boolean) |
+| 16     | Rapid Trigger Enabled (1 byte boolean) |
+| 18     | Release Dual Trigger Enabled (1 byte boolean) |
+| 19     | Last Win Enabled (1 byte boolean) |
+| 30     | RT Match Enabled (1 byte boolean) |
+
+# Notes
+if status byte 1 is 2 and status byte 2 is 0 then keyboard link is not used. If status bytes 1 is not 2 and status byte 2 is 4 then keyboard link is used. No idea what keyboard link is referring to yet.
+
+Keyboard link seems to be a variable that turns to true when there is data sent then set to false after a packet is returned and processed. So possibly something for internally checking if there are pending bytes to recieve. 
 
 ---
 
