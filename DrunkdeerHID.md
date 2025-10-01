@@ -183,3 +183,47 @@ Currently not reverse engineered.
 Currently not reverse engineered.
 
 ---
+
+### Keyboard Access Permissions (Linux)
+
+Originally I started this project because the web driver was not working. Support was less than helpful and the Drunkdeer discord was dead and filled with barely moderated spam bots.
+
+At the time I had no idea about how raw HID access on linux needed special permissions set up so this section is here to help anyone that needs it.
+
+Find the USB Device
+```
+mojobojo@mojobojo-pc:~$ lsusb
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 002: ID 0b05:19af ASUSTek Computer, Inc. AURA LED Controller
+Bus 001 Device 003: ID b58e:9e84 Blue Microphones Yeti Stereo Microphone
+Bus 001 Device 004: ID 28bd:090d XP-Pen 15.6 inch PenDisplay
+Bus 001 Device 005: ID 05e3:0608 Genesys Logic, Inc. Hub
+Bus 001 Device 006: ID 05e3:0608 Genesys Logic, Inc. Hub
+Bus 001 Device 007: ID 09da:fa10 A4Tech Co., Ltd. USB Device 
+Bus 001 Device 008: ID 13d3:3548 IMC Networks Bluetooth Radio
+Bus 001 Device 010: ID 046d:c539 Logitech, Inc. Lightspeed Receiver
+Bus 001 Device 012: ID 056a:037a Wacom Co., Ltd CTL-472 [One by Wacom (S)]
+Bus 001 Device 021: ID 046d:081b Logitech, Inc. Webcam C310
+Bus 001 Device 022: ID 352d:2384 Drunkdeer Drunkdeer G60 ANSI
+Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+```
+The vendor id and product id are the two hexadecimal numbers separated by the colon.
+
+Make a new file in your device rules directory.
+```
+mojobojo@mojobojo-pc:~$ sudo nano /etc/udev/rules.d/50-drunkdeer.rules
+```
+
+The vendor id is on the left of the colon and the product id is on the right of the colon.
+```
+KERNEL=="hidraw*", ATTRS{idVendor}=="352d", ATTRS{idProduct}=="2384", MODE="0666"
+```
+
+Reload the rules
+```
+mojobojo@mojobojo-pc:~$ sudo udevadm control --reload-rules
+mojobojo@mojobojo-pc:~$ sudo udevadm trigger
+```
+
+And it should be working. This also lets you run the daemon without sudo.
+
