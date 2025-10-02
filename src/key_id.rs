@@ -48,7 +48,8 @@ pub mod key_id {
     pub const L: u8 = 0xC8;
     pub const SEMICOLON: u8 = 0xC9;
     pub const APOSTROPHE: u8 = 0xCA;
-    pub const ENTER: u8 = 0xCB;
+    //pub const ENTER: u8 = 0xCB;
+    pub const ENTER: u8 = 0xE1; // ????????
 
     // Row 4
     pub const LSHIFT: u8 = 0xD4;
