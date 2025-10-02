@@ -1,12 +1,14 @@
 //mod data_packet;
-//mod key_id;
-//mod lightmode;
+mod key_id;
+mod lightmode;
 
 use hidapi::HidApi;
 use hidapi::HidDevice;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
+
+use crate::lightmode::light_color;
 
 struct KeyboardType {
     name: &'static str,
@@ -127,7 +129,9 @@ fn find_and_open_device(api: &HidApi) -> Option<HidDevice> {
     for device in api.device_list() {
         if device.vendor_id() == VENDOR_ID && device.usage_page() == USAGE_PAGE {
             for keyboard in KEYBOARD_TYPES {
-                if device.product_id() == keyboard.product_id {
+                if device.vendor_id() == keyboard.vendor_id
+                    && device.product_id() == keyboard.product_id
+                {
                     println!("Found Keyboard: {}", keyboard.name);
                     return device.open_device(&api).ok();
                 }
@@ -177,8 +181,57 @@ impl DataPacket {
             command: 160,
             data: [0u8; 62],
         };
-
         packet.data[0] = 2;
+
+        return packet;
+    }
+
+    fn common(turbo: bool, rapid_trigger: bool, dual_trigger: bool, last_win: bool) -> Self {
+        let mut packet = Self {
+            report_id: REPORT_ID,
+            command: 181,
+            data: [0u8; 62],
+        };
+
+        packet.data[1] = 0x1E;
+        packet.data[2] = 0x01;
+        packet.data[5] = 0x01;
+
+        if turbo {
+            packet.data[6] = 1;
+        }
+
+        if rapid_trigger {
+            packet.data[7] = 1;
+        }
+
+        if dual_trigger && last_win {
+            packet.data[9] = 3;
+        } else if dual_trigger {
+            packet.data[9] = 2;
+        } else if last_win {
+            packet.data[9] = 1;
+        }
+
+        packet.data[10] = 0; // NOTE: this is whats known as the RTMatch value. I am not sure where it comes from yet.
+
+        return packet;
+    }
+
+    fn led_mode(b: u8, mode: u8, speed: u8, brightness: u8, color: u8) -> Self {
+        let mut packet = Self {
+            report_id: REPORT_ID,
+            command: 174,
+            data: [0u8; 62],
+        };
+
+        packet.data[0] = 1;
+        packet.data[1] = 0;
+        packet.data[2] = b;
+        packet.data[3] = mode;
+        packet.data[4] = speed;
+        packet.data[5] = brightness;
+        packet.data[6] = color;
 
         return packet;
     }
@@ -218,8 +271,38 @@ fn heartbeat(device: &HidDevice) {
     println!("Heartbeat: {:?}", packet);
 }
 
+fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8, brightness: u8) {
+    let mut packet = [0u8; 64];
+
+    let data: [u8; 46] = [
+        0x04, 0xae, 0x01, 0x00, 0x00, 0x13, 0x06, brightness, 0xff, 0xe1, color_r, color_g,
+        color_b, 0xe9, color_r, color_g, color_b, 0xea, color_r, color_g, color_b, 0xeb, color_r,
+        color_g, color_b, 0xef, color_r, color_g, color_b, 0xf3, color_r, color_g, color_b, 0xf4,
+        color_r, color_g, color_b, 0xf5, color_r, color_g, color_b, 0xf6, color_r, color_g,
+        color_b, 0xff,
+    ];
+
+    packet[..46].copy_from_slice(&data);
+
+    let response = write_data_and_wait_for_response(&device, packet);
+
+    println!("{:?}", response);
+
+    let end_data: [u8; 10] = [
+        0x04, 0xAE, 0x01, 0x00, 0x00, 0x13, 0x06, brightness, 0xFF, 0xFF,
+    ];
+    let mut end_packet = [0u8; 64];
+    end_packet[..10].copy_from_slice(&end_data);
+
+    let response = write_data_and_wait_for_response(&device, end_packet);
+    println!("{:?}", response);
+}
+
 enum DeerJob {
     Heartbeat,
+    Common(bool, bool, bool, bool),
+    LedMode(u8, u8, u8, u8, u8),
+    ColorAllKeys(u8, u8, u8, u8),
 }
 
 fn main() {
@@ -236,16 +319,62 @@ fn main() {
                             DeerJob::Heartbeat => {
                                 heartbeat(&device);
                             }
+                            DeerJob::Common(turbo, rapid_trigger, dual_trigger, last_win) => {
+                                let packet = DataPacket::common(
+                                    turbo,
+                                    rapid_trigger,
+                                    dual_trigger,
+                                    last_win,
+                                );
+                                let _ = write_packet_and_wait_for_response(&device, packet);
+                            }
+                            DeerJob::LedMode(b, mode, speed, brightness, color) => {
+                                let packet =
+                                    DataPacket::led_mode(b, mode, speed, brightness, color);
+                                let _ = write_packet_and_wait_for_response(&device, packet);
+                            }
+                            DeerJob::ColorAllKeys(color_r, color_g, color_b, brightness) => {
+                                color_all_keys(&device, color_r, color_g, color_b, brightness);
+                            }
                         }
                     }
                 })
                 .expect("unable to start deerjob_handler");
 
+            let _ = tx.send(DeerJob::Common(false, true, false, false));
+            let _ = tx.send(DeerJob::ColorAllKeys(0x00, 0x00, 0xFF, 9));
+            /*
+            let mut swtich = true;
+            loop {
+                match tx.send(DeerJob::Common(swtich, true, false, false)) {
+                    Ok(_) => {}
+                    Err(error) => {
+                        eprintln!("{:?}", error)
+                    }
+                }
+
+                swtich = !swtich;
+                thread::sleep(Duration::from_secs(1));
+            }
+
+            match tx.send(DeerJob::LedMode(
+                0,
+                lightmode::light_mode::ALWAYSLIGHT,
+                6,
+                9,
+                lightmode::light_color::color_b,
+            )) {
+                Ok(_) => {}
+                Err(error) => {
+                    eprintln!("fuck {:?}", error);
+                }
+            }*/
+
             loop {
                 match tx.send(DeerJob::Heartbeat) {
                     Ok(_) => {}
                     Err(error) => {
-                        println!("send heartbeat failed: {:?}", error);
+                        eprintln!("send heartbeat failed: {:?}", error);
                         break;
                     }
                 }
