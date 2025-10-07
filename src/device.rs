@@ -2,8 +2,8 @@ use hidapi::HidApi;
 use hidapi::HidDevice;
 
 use crate::data_packet::DataPacket;
-use crate::keyboard::{KEYBOARD_TYPES, VENDOR_ID, USAGE_PAGE};
 use crate::key_id;
+use crate::keyboard::{KEYBOARD_TYPES, USAGE_PAGE, VENDOR_ID};
 
 pub fn find_and_open_device(api: &HidApi) -> Option<HidDevice> {
     for device in api.device_list() {
@@ -19,7 +19,7 @@ pub fn find_and_open_device(api: &HidApi) -> Option<HidDevice> {
         }
     }
 
-    None
+    return None;
 }
 
 pub fn write_data_and_wait_for_response(device: &HidDevice, data: [u8; 64]) -> [u8; 64] {
@@ -43,12 +43,12 @@ pub fn write_data_and_wait_for_response(device: &HidDevice, data: [u8; 64]) -> [
         }
     }
 
-    buffer
+    return buffer;
 }
 
 pub fn write_packet_and_wait_for_response(device: &HidDevice, packet: DataPacket) -> DataPacket {
     let data = write_data_and_wait_for_response(device, packet.to_bytes());
-    DataPacket::from_bytes(data)
+    return DataPacket::from_bytes(data);
 }
 
 pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8, brightness: u8) {
@@ -380,3 +380,4 @@ pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8,
 
     let _ = write_data_and_wait_for_response(device, end_packet);
 }
+

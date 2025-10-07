@@ -9,7 +9,7 @@ impl DataPacket {
     pub fn from_bytes(bytes: [u8; 64]) -> Self {
         let mut data = [0u8; 62];
 
-        assert_eq!(bytes[0], 4); 
+        assert_eq!(bytes[0], 4);
 
         data.copy_from_slice(&bytes[2..]);
         Self {
@@ -22,29 +22,29 @@ impl DataPacket {
     pub fn to_bytes(&self) -> [u8; 64] {
         let mut data = [0u8; 64];
 
-        assert_eq!(self.report_id, 4); 
+        assert_eq!(self.report_id, 4);
 
         data[0] = self.report_id;
         data[1] = self.command;
         data[2..].copy_from_slice(&self.data);
 
-        data
+        return data;
     }
 
     pub fn heartbeat() -> Self {
         let mut packet = Self {
-            report_id: 4, 
+            report_id: 4,
             command: 160,
             data: [0u8; 62],
         };
         packet.data[0] = 2;
 
-        packet
+        return packet;
     }
 
     pub fn common(turbo: bool, rapid_trigger: bool, dual_trigger: bool, last_win: bool) -> Self {
         let mut packet = Self {
-            report_id: 4, 
+            report_id: 4,
             command: 181,
             data: [0u8; 62],
         };
@@ -71,12 +71,12 @@ impl DataPacket {
 
         packet.data[10] = 0; // NOTE: this is whats known as the RTMatch value. I am not sure where it comes from yet.
 
-        packet
+        return packet;
     }
 
     pub fn led_mode(b: u8, mode: u8, speed: u8, brightness: u8, color: u8) -> Self {
         let mut packet = Self {
-            report_id: 4, 
+            report_id: 4,
             command: 174,
             data: [0u8; 62],
         };
@@ -89,6 +89,6 @@ impl DataPacket {
         packet.data[5] = brightness;
         packet.data[6] = color;
 
-        packet
+        return packet;
     }
 }
