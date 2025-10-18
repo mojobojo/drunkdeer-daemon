@@ -7,8 +7,18 @@ use crate::device::{write_packet_and_wait_for_response, color_all_keys};
 
 pub enum DeerJob {
     Heartbeat,
-    Common(bool, bool, bool, bool),
-    ColorAllKeys(u8, u8, u8, u8),
+    Common {
+        turbo: bool,
+        rapid_trigger: bool,
+        dual_trigger: bool,
+        last_win: bool,
+    },
+    ColorAllKeys {
+        color_r: u8,
+        color_g: u8,
+        color_b: u8,
+        brightness: u8,
+    },
 }
 
 pub fn start_job_handler(device: HidDevice, rx: mpsc::Receiver<DeerJob>) {
@@ -22,7 +32,7 @@ pub fn start_job_handler(device: HidDevice, rx: mpsc::Receiver<DeerJob>) {
                         let response = write_packet_and_wait_for_response(&device, packet);
                         println!("Heartbeat: {:?}", response);
                     }
-                    DeerJob::Common(turbo, rapid_trigger, dual_trigger, last_win) => {
+                    DeerJob::Common {turbo, rapid_trigger, dual_trigger, last_win} => {
                         let packet = DataPacket::common(
                             turbo,
                             rapid_trigger,
@@ -31,7 +41,9 @@ pub fn start_job_handler(device: HidDevice, rx: mpsc::Receiver<DeerJob>) {
                         );
                         let _ = write_packet_and_wait_for_response(&device, packet);
                     }
-                    DeerJob::ColorAllKeys(color_r, color_g, color_b, brightness) => {
+                    DeerJob::ColorAllKeys {color_r, color_g, color_b, brightness} => {
+                        // NOTE: if brightness is > 9 then the keyboard fails to respond
+                        assert!(brightness <= 9);
                         color_all_keys(&device, color_r, color_g, color_b, brightness);
                     }
                 }

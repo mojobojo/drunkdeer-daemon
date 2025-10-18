@@ -52,8 +52,6 @@ pub fn write_packet_and_wait_for_response(device: &HidDevice, packet: DataPacket
 }
 
 pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8, brightness: u8) {
-    let mut packet = [0u8; 64];
-
     let data: [u8; 62] = [
         0x04,
         0xAE,
@@ -119,6 +117,7 @@ pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8,
         0xFF,
     ];
 
+    let mut packet = [0u8; 64];
     packet[..62].copy_from_slice(&data);
 
     let _ = write_data_and_wait_for_response(device, packet);
@@ -188,6 +187,7 @@ pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8,
         0xFF,
     ];
 
+    packet = [0u8; 64];
     packet[..62].copy_from_slice(&data);
     let _ = write_data_and_wait_for_response(device, packet);
 
@@ -256,6 +256,7 @@ pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8,
         0xFF,
     ];
 
+    packet = [0u8; 64];
     packet[..62].copy_from_slice(&data);
     let _ = write_data_and_wait_for_response(device, packet);
 
@@ -273,11 +274,11 @@ pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8,
         color_r,
         color_g,
         color_b,
-        key_id::key_id::LSHIFT,
+        0xCC,
         color_r,
         color_g,
         color_b,
-        key_id::key_id::Z,
+        0xD4,
         color_r,
         color_g,
         color_b,
@@ -324,10 +325,11 @@ pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8,
         0xFF,
     ];
 
+    packet = [0u8; 64];
     packet[..62].copy_from_slice(&data);
     let _ = write_data_and_wait_for_response(device, packet);
 
-    let data: [u8; 38] = [
+    let data: [u8; 46] = [
         0x04,
         0xAE,
         0x01,
@@ -353,31 +355,41 @@ pub fn color_all_keys(device: &HidDevice, color_r: u8, color_g: u8, color_b: u8,
         color_r,
         color_g,
         color_b,
-        key_id::key_id::SPACE,
+        0xEF,
         color_r,
         color_g,
         color_b,
-        key_id::key_id::MENU,
+        0xF3,
         color_r,
         color_g,
         color_b,
-        key_id::key_id::RCTRL,
+        0xF4,
+        color_r,
+        color_g,
+        color_b,
+        0xF5,
+        color_r,
+        color_g,
+        color_b,
+        0xF6,
         color_r,
         color_g,
         color_b,
         0xFF,
     ];
 
-    packet[..38].copy_from_slice(&data);
+    packet = [0u8; 64];
+    packet[..46].copy_from_slice(&data);
     let _ = write_data_and_wait_for_response(device, packet);
 
     // final end packet
     let end_data: [u8; 10] = [
         0x04, 0xAE, 0x01, 0x00, 0x00, 0x13, 0x06, brightness, 0xFF, 0xFF,
     ];
-    let mut end_packet = [0u8; 64];
-    end_packet[..10].copy_from_slice(&end_data);
 
-    let _ = write_data_and_wait_for_response(device, end_packet);
+    packet = [0u8; 64];
+    packet[..10].copy_from_slice(&end_data);
+
+    let _ = write_data_and_wait_for_response(device, packet);
 }
 

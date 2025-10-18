@@ -18,8 +18,18 @@ fn main() {
 
             crate::jobs::start_job_handler(device, rx);
 
-            let _ = tx.send(crate::jobs::DeerJob::Common(false, true, false, false));
-            let _ = tx.send(crate::jobs::DeerJob::ColorAllKeys(0x00, 0x00, 0xFF, 9));
+            let _ = tx.send(crate::jobs::DeerJob::Common{
+                turbo: false,
+                rapid_trigger: true,
+                dual_trigger: false,
+                last_win: false,
+            });
+            let _ = tx.send(crate::jobs::DeerJob::ColorAllKeys{
+                color_r: 0,
+                color_g: 0,
+                color_b: 255,
+                brightness: 9,
+            });
             /*
             let mut swtich = true;
             loop {
