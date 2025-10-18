@@ -3,7 +3,7 @@ use std::thread;
 use hidapi::HidDevice;
 
 use crate::data_packet::DataPacket;
-use crate::device::{write_packet_and_wait_for_response, color_all_keys};
+use crate::device::*;
 
 pub enum DeerJob {
     Heartbeat,
@@ -14,6 +14,13 @@ pub enum DeerJob {
         last_win: bool,
     },
     ColorAllKeys {
+        color_r: u8,
+        color_g: u8,
+        color_b: u8,
+        brightness: u8,
+    },
+    ColorOneKey {
+        key_id: u8,
         color_r: u8,
         color_g: u8,
         color_b: u8,
@@ -45,6 +52,10 @@ pub fn start_job_handler(device: HidDevice, rx: mpsc::Receiver<DeerJob>) {
                         // NOTE: if brightness is > 9 then the keyboard fails to respond
                         assert!(brightness <= 9);
                         color_all_keys(&device, color_r, color_g, color_b, brightness);
+                    },
+                    DeerJob::ColorOneKey {key_id, color_r, color_g, color_b, brightness} => {
+                        assert!(brightness <= 9);
+                        set_led_by_key_id(&device, key_id, color_r, color_g, color_b, brightness);
                     }
                 }
             }

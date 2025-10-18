@@ -48,30 +48,29 @@ pub mod key_id {
     pub const L: u8 = 0xC8;
     pub const SEMICOLON: u8 = 0xC9;
     pub const APOSTROPHE: u8 = 0xCA;
-    //pub const ENTER: u8 = 0xCB;
-    pub const ENTER: u8 = 0xE1; // ????????
+    pub const ENTER: u8 = 0xCC;
 
     // Row 4
     pub const LSHIFT: u8 = 0xD4;
-    pub const Z: u8 = 0xD5;
-    pub const X: u8 = 0xD6;
-    pub const C: u8 = 0xD7;
-    pub const V: u8 = 0xD8;
-    pub const B: u8 = 0xD9;
-    pub const N: u8 = 0xDA;
-    pub const M: u8 = 0xDB;
-    pub const COMMA: u8 = 0xDC;
-    pub const PERIOD: u8 = 0xDD;
-    pub const SLASH: u8 = 0xDE;
-    pub const RSHIFT: u8 = 0xDF;
+    pub const Z: u8 = 0xD6;
+    pub const X: u8 = 0xD7;
+    pub const C: u8 = 0xD8;
+    pub const V: u8 = 0xD9;
+    pub const B: u8 = 0xDA;
+    pub const N: u8 = 0xDB;
+    pub const M: u8 = 0xDC;
+    pub const COMMA: u8 = 0xDD;
+    pub const PERIOD: u8 = 0xDE;
+    pub const FORWARDSLASH: u8 = 0xDF;
+    pub const RSHIFT: u8 = 0xE1;
 
     // Row 5 (bottom)
     pub const LCTRL: u8 = 0xE9;
     pub const LWIN: u8 = 0xEA;
     pub const LALT: u8 = 0xEB;
-    pub const SPACE: u8 = 0xEC;
-    pub const RALT: u8 = 0xED;
-    pub const FN: u8 = 0xEE;
-    pub const MENU: u8 = 0xEF;
-    pub const RCTRL: u8 = 0xF0;
+    pub const SPACE: u8 = 0xEF;
+    pub const RALT: u8 = 0xF3;
+    pub const FN: u8 = 0xF4;
+    pub const MENU: u8 = 0xF5;
+    pub const RCTRL: u8 = 0xF6;
 }
